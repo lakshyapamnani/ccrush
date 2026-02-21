@@ -20,6 +20,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [matchFlash, setMatchFlash] = useState<string | null>(null)
+  const [firebaseError, setFirebaseError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadProfiles = async () => {
@@ -60,45 +61,55 @@ export default function HomePage() {
     nextCard()
     const target = profiles[currentIndex]
     if (user && target) {
-      try { await recordSwipe(user.uid, target.uid, 'pass') } catch { /* rules not set yet */ }
+      try { await recordSwipe(user.uid, target.uid, 'pass') } catch (e) { console.warn('Swipe write blocked:', e) }
     }
   }
 
   const handleLike = async () => {
     nextCard()
     const target = profiles[currentIndex]
-    if (user && target) {
-      try {
-        await recordSwipe(user.uid, target.uid, 'like')
-        // Notify the liked person
-        sendNotification(target.uid, '💜 Someone liked you!', `${myProfile?.name || 'Someone'} liked your profile on College Crush!`)
-        const theirAction = await getSwipeAction(target.uid, user.uid)
-        if (theirAction === 'like' || theirAction === 'super-like') {
-          await createMatch(user.uid, target.uid)
-          setMatchFlash(target.name)
-          setTimeout(() => setMatchFlash(null), 2500)
-          // Notify both users of a match
-          sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
-        }
-      } catch { /* Firebase rules may not be configured yet */ }
+    if (!user || !target) return
+    try {
+      await recordSwipe(user.uid, target.uid, 'like')
+      sendNotification(target.uid, '💜 Someone liked you!', `${myProfile?.name || 'Someone'} liked your profile on College Crush!`)
+      const theirAction = await getSwipeAction(target.uid, user.uid)
+      if (theirAction === 'like' || theirAction === 'super-like') {
+        await createMatch(user.uid, target.uid)
+        setMatchFlash(target.name)
+        setTimeout(() => setMatchFlash(null), 3000)
+        sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('Firebase write error:', msg)
+      if (msg.includes('PERMISSION_DENIED')) {
+        setFirebaseError('Firebase Rules not set — swipes & matches cannot be saved. Update Rules in Firebase Console.')
+        setTimeout(() => setFirebaseError(null), 6000)
+      }
     }
   }
 
   const handleSuperLike = async () => {
     nextCard()
     const target = profiles[currentIndex]
-    if (user && target) {
-      try {
-        await recordSwipe(user.uid, target.uid, 'super-like')
-        sendNotification(target.uid, '⚡ Super Like!', `${myProfile?.name || 'Someone'} super liked your profile on College Crush!`)
-        const theirAction = await getSwipeAction(target.uid, user.uid)
-        if (theirAction === 'like' || theirAction === 'super-like') {
-          await createMatch(user.uid, target.uid)
-          setMatchFlash(target.name)
-          setTimeout(() => setMatchFlash(null), 2500)
-          sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
-        }
-      } catch { /* Firebase rules may not be configured yet */ }
+    if (!user || !target) return
+    try {
+      await recordSwipe(user.uid, target.uid, 'super-like')
+      sendNotification(target.uid, '⚡ Super Like!', `${myProfile?.name || 'Someone'} super liked your profile on College Crush!`)
+      const theirAction = await getSwipeAction(target.uid, user.uid)
+      if (theirAction === 'like' || theirAction === 'super-like') {
+        await createMatch(user.uid, target.uid)
+        setMatchFlash(target.name)
+        setTimeout(() => setMatchFlash(null), 3000)
+        sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      console.error('Firebase write error:', msg)
+      if (msg.includes('PERMISSION_DENIED')) {
+        setFirebaseError('Firebase Rules not set — swipes & matches cannot be saved. Update Rules in Firebase Console.')
+        setTimeout(() => setFirebaseError(null), 6000)
+      }
     }
   }
 
@@ -172,6 +183,13 @@ export default function HomePage() {
       </AnimatePresence>
 
       <div className="w-full max-w-sm">
+        {/* Firebase rules error banner */}
+        {firebaseError && (
+          <div className="mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-2xl text-red-300 text-xs text-center">
+            ⚠️ {firebaseError}
+          </div>
+        )}
+
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-white mb-1">Discover</h1>
           <p className="text-brand-mutedText">Swipe to find your match</p>
