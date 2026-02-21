@@ -1,14 +1,23 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Camera, Plus, X, Upload, CheckCircle2 } from 'lucide-react'
+import { Heart, Camera, Plus, X, CheckCircle2 } from 'lucide-react'
 import { auth, saveUserProfile } from '@/lib/firebase'
 import { uploadToCloudinary } from '@/lib/cloudinary'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function ProfileSetupPage() {
   const router = useRouter()
+  const { user, profile, loading, refreshProfile } = useAuth()
+
+  // If user already has a profile, skip setup
+  useEffect(() => {
+    if (!loading && profile) {
+      router.replace('/app/home')
+    }
+  }, [loading, profile, router])
 
   const [formData, setFormData] = useState({
     name: '',
@@ -82,6 +91,7 @@ export default function ProfileSetupPage() {
         createdAt: Date.now(),
       })
 
+      await refreshProfile()
       router.push('/app/home')
     } catch (err) {
       console.error(err)
