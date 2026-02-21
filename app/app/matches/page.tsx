@@ -3,80 +3,47 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Heart, MessageCircle, Trash2 } from 'lucide-react'
-import {
-  getCurrentUser,
-  getUserMatches,
-  getUserById,
-  deleteMatch,
-  getMatchMessages,
-  User,
-  Match,
-} from '@/lib/storage'
+import { Heart, MessageCircle } from 'lucide-react'
+import { useAuth } from '@/lib/AuthContext'
+import { getMatchesForUser, getUserProfile, Match, UserProfile } from '@/lib/firebase'
 
-interface MatchWithUser {
+interface MatchWithProfile {
   match: Match
-  user: User
-  lastMessage: string | null
+  otherUser: UserProfile
 }
 
 export default function MatchesPage() {
   const router = useRouter()
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [matches, setMatches] = useState<MatchWithUser[]>([])
+  const { user } = useAuth()
+  const [matches, setMatches] = useState<MatchWithProfile[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const user = getCurrentUser()
-    setCurrentUser(user)
-
-    if (user) {
-      loadMatches(user.id)
-    }
-  }, [])
-
-  const loadMatches = (userId: string) => {
-    const userMatches = getUserMatches(userId)
-    const matchData: MatchWithUser[] = []
-
-    userMatches.forEach((match) => {
-      const otherUserId = match.user1Id === userId ? match.user2Id : match.user1Id
-      const otherUser = getUserById(otherUserId)
-
-      if (otherUser) {
-        const messages = getMatchMessages(match.id)
-        const lastMessage = messages.length > 0 ? messages[messages.length - 1].content : null
-
-        matchData.push({
-          match,
-          user: otherUser,
-          lastMessage,
-        })
+    const load = async () => {
+      if (!user) return
+      try {
+        const rawMatches = await getMatchesForUser(user.uid)
+        const enriched = await Promise.all(
+          rawMatches.map(async (match) => {
+            const otherUid = match.users[0] === user.uid ? match.users[1] : match.users[0]
+            const otherUser = await getUserProfile(otherUid)
+            return otherUser ? { match, otherUser } : null
+          })
+        )
+        setMatches(enriched.filter(Boolean) as MatchWithProfile[])
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
       }
-    })
-
-    // Sort by last message time
-    matchData.sort((a, b) => b.match.lastMessageTime - a.match.lastMessageTime)
-    setMatches(matchData)
-    setLoading(false)
-  }
-
-  const handleDeleteMatch = (matchId: string) => {
-    deleteMatch(matchId)
-    setMatches(matches.filter((m) => m.match.id !== matchId))
-  }
-
-  const handleOpenChat = (matchId: string) => {
-    router.push(`/app/chat?matchId=${matchId}`)
-  }
+    }
+    load()
+  }, [user])
 
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-brand-pink/30 border-t-brand-pink rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-brand-mutedText">Loading matches...</p>
-        </div>
+        <div className="w-12 h-12 border-4 border-brand-pink/30 border-t-brand-pink rounded-full animate-spin" />
       </div>
     )
   }
@@ -84,9 +51,10 @@ export default function MatchesPage() {
   return (
     <div className="min-h-screen bg-gradient-brand px-4 py-8">
       <div className="max-w-md mx-auto">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-white mb-2">Your Matches</h1>
-        <p className="text-brand-mutedText mb-8">{matches.length} connection{matches.length !== 1 ? 's' : ''}</p>
+        <h1 className="text-3xl font-bold text-white mb-1">Matches</h1>
+        <p className="text-brand-mutedText mb-8">
+          {matches.length} mutual match{matches.length !== 1 ? 'es' : ''}
+        </p>
 
         {matches.length === 0 ? (
           <div className="text-center py-16">
@@ -95,7 +63,7 @@ export default function MatchesPage() {
             </div>
             <h2 className="text-xl font-semibold text-white mb-2">No Matches Yet</h2>
             <p className="text-brand-mutedText">
-              Keep swiping to find your perfect match!
+              When you and someone both like each other, they'll appear here!
             </p>
           </div>
         ) : (
@@ -109,43 +77,37 @@ export default function MatchesPage() {
                 className="bg-brand-cardBg rounded-2xl border border-brand-deep overflow-hidden hover:border-brand-pink transition-colors group"
               >
                 <button
-                  onClick={() => handleOpenChat(item.match.id)}
+                  onClick={() => router.push(`/app/chat?matchId=${item.match.id}`)}
                   className="w-full p-4 flex items-center gap-4"
                 >
                   {/* Avatar */}
                   <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-pink/50 group-hover:border-brand-pink transition-colors">
-                    <img
-                      src={item.user.profilePhoto}
-                      alt={item.user.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {item.otherUser.photos?.[0] ? (
+                      <img
+                        src={item.otherUser.photos[0]}
+                        alt={item.otherUser.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-brand-deep flex items-center justify-center text-xl font-bold text-white">
+                        {item.otherUser.name[0]}
+                      </div>
+                    )}
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 text-left min-w-0">
-                    <h3 className="font-semibold text-white truncate">
-                      {item.user.name}
+                    <h3 className="font-semibold text-white">
+                      {item.otherUser.name}, {item.otherUser.age}
                     </h3>
-                    <p className="text-sm text-brand-mutedText truncate">
-                      {item.lastMessage || 'No messages yet'}
-                    </p>
+                    <p className="text-sm text-brand-mutedText truncate">{item.otherUser.course}</p>
                   </div>
 
-                  {/* Message Icon */}
-                  <MessageCircle className="w-5 h-5 text-brand-pink flex-shrink-0" />
+                  {/* Chat icon */}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-pink flex items-center justify-center group-hover:shadow-glow transition-all">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
                 </button>
-
-                {/* Delete Button */}
-                <div className="px-4 pb-4 flex justify-end">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleDeleteMatch(item.match.id)}
-                    className="p-2 rounded-lg hover:bg-red-500/20 transition-colors text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </motion.button>
-                </div>
               </motion.div>
             ))}
           </div>

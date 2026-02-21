@@ -88,3 +88,89 @@ export async function getAllUserProfiles(): Promise<UserProfile[]> {
   })
   return profiles
 }
+
+// ── Swipes ────────────────────────────────────────────────────────────────────
+
+export async function recordSwipe(
+  fromUid: string,
+  toUid: string,
+  action: 'like' | 'pass' | 'super-like'
+): Promise<void> {
+  await set(ref(db, `swipes/${fromUid}/${toUid}`), action)
+}
+
+export async function getSwipeAction(
+  fromUid: string,
+  toUid: string
+): Promise<string | null> {
+  const snapshot = await get(ref(db, `swipes/${fromUid}/${toUid}`))
+  return snapshot.exists() ? snapshot.val() : null
+}
+
+// ── Matches ───────────────────────────────────────────────────────────────────
+
+export interface Match {
+  id: string
+  users: [string, string]
+  createdAt: number
+}
+
+export async function createMatch(uid1: string, uid2: string): Promise<string> {
+  const matchId = [uid1, uid2].sort().join('_')
+  await set(ref(db, `matches/${matchId}`), {
+    users: [uid1, uid2],
+    createdAt: Date.now(),
+  })
+  return matchId
+}
+
+export async function getMatchesForUser(uid: string): Promise<Match[]> {
+  const snapshot = await get(ref(db, 'matches'))
+  if (!snapshot.exists()) return []
+
+  const matches: Match[] = []
+  snapshot.forEach((child) => {
+    const data = child.val()
+    if (data.users && (data.users[0] === uid || data.users[1] === uid)) {
+      matches.push({ id: child.key as string, ...data })
+    }
+  })
+  return matches
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  id: string
+  senderUid: string
+  text: string
+  timestamp: number
+}
+
+export async function sendMessage(
+  matchId: string,
+  senderUid: string,
+  text: string
+): Promise<void> {
+  const { push } = await import('firebase/database')
+  const msgRef = push(ref(db, `messages/${matchId}`))
+  await set(msgRef, { senderUid, text, timestamp: Date.now() })
+}
+
+export function subscribeToMessages(
+  matchId: string,
+  callback: (msgs: ChatMessage[]) => void
+): () => void {
+  const { onValue } = require('firebase/database')
+  const msgsRef = ref(db, `messages/${matchId}`)
+  const unsub = onValue(msgsRef, (snapshot: { exists: () => boolean; forEach: (fn: (child: { key: string; val: () => Omit<ChatMessage, 'id'> }) => void) => void }) => {
+    const msgs: ChatMessage[] = []
+    if (snapshot.exists()) {
+      snapshot.forEach((child) => {
+        msgs.push({ id: child.key, ...child.val() })
+      })
+    }
+    callback(msgs)
+  })
+  return unsub
+}
