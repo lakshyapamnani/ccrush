@@ -74,3 +74,17 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   }
   return null
 }
+
+export async function getAllUserProfiles(): Promise<UserProfile[]> {
+  const snapshot = await get(ref(db, 'users'))
+  if (!snapshot.exists()) return []
+
+  const profiles: UserProfile[] = []
+  snapshot.forEach((child) => {
+    const profileData = child.val()?.profile
+    if (profileData && profileData.name) {
+      profiles.push({ uid: child.key as string, ...profileData })
+    }
+  })
+  return profiles
+}

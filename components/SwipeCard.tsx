@@ -1,11 +1,10 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { User } from '@/lib/storage'
+import { UserProfile } from '@/lib/firebase'
 
 interface SwipeCardProps {
-  profile: User
-  matchPercentage: number
+  profile: UserProfile
   onPass: () => void
   onLike: () => void
   onSuperLike: () => void
@@ -13,22 +12,17 @@ interface SwipeCardProps {
 
 export default function SwipeCard({
   profile,
-  matchPercentage,
   onPass,
   onLike,
   onSuperLike,
 }: SwipeCardProps) {
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = (event: unknown, info: { offset?: { x: number }; velocity?: { x: number } }) => {
     try {
       const swipeThreshold = 100
       const swipeVelocityThreshold = 500
-
-      // Safe access with fallback values - handle undefined info
       if (!info) return
-
       const offsetX = info.offset?.x ?? 0
       const velocityX = info.velocity?.x ?? 0
-
       if (offsetX > swipeThreshold || velocityX > swipeVelocityThreshold) {
         onLike()
       } else if (offsetX < -swipeThreshold || velocityX < -swipeVelocityThreshold) {
@@ -38,6 +32,9 @@ export default function SwipeCard({
       console.error('Drag error:', error)
     }
   }
+
+  const mainPhoto = profile.photos?.[0] || ''
+  const galleryPhotos = profile.photos?.slice(1) || []
 
   return (
     <motion.div
@@ -51,11 +48,11 @@ export default function SwipeCard({
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       className="w-full h-full rounded-2xl overflow-y-auto overflow-x-hidden cursor-grab active:cursor-grabbing bg-brand-cardBg shadow-glow-lg flex flex-col hide-scrollbar"
     >
-      {/* Image Section */}
+      {/* Main Photo */}
       <div className="relative w-full h-64 bg-brand-cardBg flex-shrink-0">
-        {profile.profilePhoto ? (
+        {mainPhoto ? (
           <img
-            src={profile.profilePhoto}
+            src={mainPhoto}
             alt={profile.name}
             className="w-full h-full object-cover"
             onError={(e) => {
@@ -73,22 +70,15 @@ export default function SwipeCard({
         )}
       </div>
 
-      {/* Info Card Section */}
+      {/* Info Section */}
       <div className="w-full bg-brand-cardBg border-t border-brand-secondary/30 p-4 pb-8 flex-shrink-0">
         <div className="space-y-4">
-          {/* Match Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-pink/90 backdrop-blur-sm">
-            <span className="text-xs font-bold text-white">{matchPercentage}% Match</span>
-          </div>
-
-          {/* Name and Age */}
+          {/* Name & Age */}
           <div>
             <h2 className="text-2xl font-bold text-white">
-              {profile.name[0].toUpperCase()}, {profile.age}
+              {profile.name}, {profile.age}
             </h2>
-            <p className="text-sm text-brand-mutedText">
-              {profile.major} • {profile.year}
-            </p>
+            <p className="text-sm text-brand-mutedText">{profile.course}</p>
           </div>
 
           {/* Bio */}
@@ -99,27 +89,19 @@ export default function SwipeCard({
             </div>
           )}
 
-          {/* Interests Section */}
-          <div>
-            <p className="text-xs font-semibold text-brand-mutedText mb-2">Interests</p>
-            <div className="flex flex-wrap gap-2">
-              {profile.interests.map((interest) => (
-                <span
-                  key={interest}
-                  className="px-3 py-1 text-xs rounded-full bg-brand-pink/20 text-brand-pink border border-brand-pink/40"
-                >
-                  {interest}
-                </span>
-              ))}
+          {/* Extra photos as mini gallery */}
+          {galleryPhotos.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-brand-mutedText mb-2">More Photos</p>
+              <div className="flex gap-2">
+                {galleryPhotos.map((photo, i) => (
+                  <div key={i} className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-brand-deep">
+                    <img src={photo} alt={`Photo ${i + 2}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* Additional Info */}
-          <div className="border-t border-brand-secondary/30 pt-3 mt-3">
-            <p className="text-xs text-brand-mutedText">
-              <span className="font-semibold">College:</span> {profile.college}
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </motion.div>
