@@ -81,7 +81,7 @@ export async function getAllUserProfiles(): Promise<UserProfile[]> {
   if (!snapshot.exists()) return []
 
   const profiles: UserProfile[] = []
-  snapshot.forEach((child) => {
+  snapshot.forEach((child: any) => {
     const profileData = child.val()?.profile
     if (profileData && profileData.name) {
       profiles.push({ uid: child.key as string, ...profileData })
@@ -130,7 +130,7 @@ export async function getMatchesForUser(uid: string): Promise<Match[]> {
   if (!snapshot.exists()) return []
 
   const matches: Match[] = []
-  snapshot.forEach((child) => {
+  snapshot.forEach((child: any) => {
     const data = child.val()
     if (data.users && (data.users[0] === uid || data.users[1] === uid)) {
       matches.push({ id: child.key as string, ...data })
@@ -167,10 +167,10 @@ export function subscribeToMessages(
   callback: (msgs: ChatMessage[]) => void
 ): () => void {
   const msgsRef = ref(db, `messages/${matchId}`)
-  const unsub = onValue(msgsRef, (snapshot) => {
+  const unsub = onValue(msgsRef, (snapshot: any) => {
     const msgs: ChatMessage[] = []
     if (snapshot.exists()) {
-      snapshot.forEach((child) => {
+      snapshot.forEach((child: any) => {
         msgs.push({ id: child.key as string, ...child.val() })
       })
     }
