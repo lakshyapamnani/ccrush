@@ -8,3 +8,8 @@ node_modules/
 .next/
 
 .DS_Store
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env*.local
