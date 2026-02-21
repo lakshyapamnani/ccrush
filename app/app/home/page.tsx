@@ -49,41 +49,45 @@ export default function HomePage() {
   const nextCard = () => setCurrentIndex((prev) => prev + 1)
 
   const handlePass = async () => {
+    nextCard() // advance immediately — don't wait for Firebase
     const target = profiles[currentIndex]
     if (user && target) {
-      await recordSwipe(user.uid, target.uid, 'pass')
+      try { await recordSwipe(user.uid, target.uid, 'pass') } catch { /* rules not set yet */ }
     }
-    nextCard()
   }
 
   const handleLike = async () => {
+    nextCard() // advance immediately
     const target = profiles[currentIndex]
     if (user && target) {
-      await recordSwipe(user.uid, target.uid, 'like')
-      // Check if target already liked current user → mutual match
-      const theirAction = await getSwipeAction(target.uid, user.uid)
-      if (theirAction === 'like' || theirAction === 'super-like') {
-        await createMatch(user.uid, target.uid)
-        setMatchFlash(target.name)
-        setTimeout(() => setMatchFlash(null), 2500)
-      }
+      try {
+        await recordSwipe(user.uid, target.uid, 'like')
+        const theirAction = await getSwipeAction(target.uid, user.uid)
+        if (theirAction === 'like' || theirAction === 'super-like') {
+          await createMatch(user.uid, target.uid)
+          setMatchFlash(target.name)
+          setTimeout(() => setMatchFlash(null), 2500)
+        }
+      } catch { /* Firebase rules may not be configured yet */ }
     }
-    nextCard()
   }
 
   const handleSuperLike = async () => {
+    nextCard() // advance immediately
     const target = profiles[currentIndex]
     if (user && target) {
-      await recordSwipe(user.uid, target.uid, 'super-like')
-      const theirAction = await getSwipeAction(target.uid, user.uid)
-      if (theirAction === 'like' || theirAction === 'super-like') {
-        await createMatch(user.uid, target.uid)
-        setMatchFlash(target.name)
-        setTimeout(() => setMatchFlash(null), 2500)
-      }
+      try {
+        await recordSwipe(user.uid, target.uid, 'super-like')
+        const theirAction = await getSwipeAction(target.uid, user.uid)
+        if (theirAction === 'like' || theirAction === 'super-like') {
+          await createMatch(user.uid, target.uid)
+          setMatchFlash(target.name)
+          setTimeout(() => setMatchFlash(null), 2500)
+        }
+      } catch { /* Firebase rules may not be configured yet */ }
     }
-    nextCard()
   }
+
 
   if (loading) {
     return (
