@@ -40,6 +40,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(firebaseUser)
             if (firebaseUser) {
                 await loadProfile(firebaseUser.uid)
+                // Register user with OneSignal for targeted push notifications
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const w = window as any
+                    if (w.OneSignalDeferred) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        w.OneSignalDeferred.push(async (OneSignal: any) => {
+                            try {
+                                OneSignal.login?.(firebaseUser.uid)
+                                OneSignal.User?.addTag('uid', firebaseUser.uid)
+                            } catch { /* ignore */ }
+                        })
+                    }
+                } catch { /* OneSignal not loaded yet */ }
+
             } else {
                 setProfile(null)
             }
@@ -47,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
         return unsubscribe
     }, [])
+
 
     return (
         <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>

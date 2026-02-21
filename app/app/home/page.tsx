@@ -48,8 +48,16 @@ export default function HomePage() {
 
   const nextCard = () => setCurrentIndex((prev) => prev + 1)
 
+  const sendNotification = (targetUid: string, title: string, message: string) => {
+    fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetUid, title, message }),
+    }).catch(() => { /* silently ignore */ })
+  }
+
   const handlePass = async () => {
-    nextCard() // advance immediately — don't wait for Firebase
+    nextCard()
     const target = profiles[currentIndex]
     if (user && target) {
       try { await recordSwipe(user.uid, target.uid, 'pass') } catch { /* rules not set yet */ }
@@ -57,36 +65,43 @@ export default function HomePage() {
   }
 
   const handleLike = async () => {
-    nextCard() // advance immediately
+    nextCard()
     const target = profiles[currentIndex]
     if (user && target) {
       try {
         await recordSwipe(user.uid, target.uid, 'like')
+        // Notify the liked person
+        sendNotification(target.uid, '💜 Someone liked you!', `${myProfile?.name || 'Someone'} liked your profile on College Crush!`)
         const theirAction = await getSwipeAction(target.uid, user.uid)
         if (theirAction === 'like' || theirAction === 'super-like') {
           await createMatch(user.uid, target.uid)
           setMatchFlash(target.name)
           setTimeout(() => setMatchFlash(null), 2500)
+          // Notify both users of a match
+          sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
         }
       } catch { /* Firebase rules may not be configured yet */ }
     }
   }
 
   const handleSuperLike = async () => {
-    nextCard() // advance immediately
+    nextCard()
     const target = profiles[currentIndex]
     if (user && target) {
       try {
         await recordSwipe(user.uid, target.uid, 'super-like')
+        sendNotification(target.uid, '⚡ Super Like!', `${myProfile?.name || 'Someone'} super liked your profile on College Crush!`)
         const theirAction = await getSwipeAction(target.uid, user.uid)
         if (theirAction === 'like' || theirAction === 'super-like') {
           await createMatch(user.uid, target.uid)
           setMatchFlash(target.name)
           setTimeout(() => setMatchFlash(null), 2500)
+          sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
         }
       } catch { /* Firebase rules may not be configured yet */ }
     }
   }
+
 
 
   if (loading) {
