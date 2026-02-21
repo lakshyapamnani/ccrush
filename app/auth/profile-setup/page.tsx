@@ -97,8 +97,15 @@ export default function ProfileSetupPage() {
       await refreshProfile()
       router.push('/app/home')
     } catch (err) {
-      console.error(err)
-      setError('Failed to save profile. Please try again.')
+      console.error('Profile save error:', err)
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('PERMISSION_DENIED')) {
+        setError('Firebase Rules not set. Go to Firebase Console → Realtime Database → Rules and publish the rules.')
+      } else if (msg.includes('upload') || msg.includes('cloudinary') || msg.includes('cloud')) {
+        setError('Photo upload failed. Check your Cloudinary settings in .env.local')
+      } else {
+        setError(`Failed to save: ${msg}`)
+      }
     } finally {
       setUploading(false)
     }
@@ -230,8 +237,8 @@ export default function ProfileSetupPage() {
                   type="button"
                   onClick={() => setFormData({ ...formData, gender: g })}
                   className={`flex-1 py-3 rounded-2xl text-sm font-semibold capitalize transition-all ${formData.gender === g
-                      ? 'bg-gradient-pink text-white shadow-glow'
-                      : 'bg-brand-cardBg border border-brand-deep text-brand-mutedText hover:border-brand-pink'
+                    ? 'bg-gradient-pink text-white shadow-glow'
+                    : 'bg-brand-cardBg border border-brand-deep text-brand-mutedText hover:border-brand-pink'
                     }`}
                 >
                   {g === 'male' ? '♂ Male' : g === 'female' ? '♀ Female' : '⚧ Other'}
