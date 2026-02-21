@@ -8,15 +8,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // College Crush brand colors
+        // Hinge-style light brand colors
         brand: {
-          dark: "#2B0F1E",
-          deep: "#3E0F2C",
-          pink: "#FF3C8E",
-          pinkLight: "#FF007A",
-          accent: "#FF1493",
-          mutedText: "#A0A0A0",
-          cardBg: "#1a0f16",
+          dark: "#ffffff",
+          deep: "#f9fafb",
+          pink: "#8b5cf6",
+          pinkLight: "#a78bfa",
+          accent: "#8b5cf6",
+          mutedText: "#6b7280",
+          cardBg: "#ffffff",
           success: "#10b981",
         },
       },
@@ -25,16 +25,17 @@ const config: Config = {
       },
       backgroundImage: {
         "gradient-brand":
-          "linear-gradient(135deg, #2B0F1E 0%, #3E0F2C 100%)",
+          "linear-gradient(180deg, #f9fafb 0%, #ffffff 100%)",
         "gradient-pink":
-          "linear-gradient(135deg, #FF3C8E 0%, #FF007A 100%)",
+          "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)",
         "gradient-button":
-          "linear-gradient(135deg, #FF3C8E 0%, #FF007A 100%)",
+          "linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)",
       },
       boxShadow: {
-        glow: "0 0 20px rgba(255, 60, 142, 0.4)",
-        "glow-lg": "0 0 40px rgba(255, 60, 142, 0.6)",
-        "glow-sm": "0 0 10px rgba(255, 60, 142, 0.3)",
+        glow: "0 4px 14px 0 rgba(139, 92, 246, 0.39)",
+        "glow-lg": "0 6px 20px rgba(139, 92, 246, 0.4)",
+        "glow-sm": "0 2px 4px rgba(0,0,0,0.06)",
+        "card": "0 4px 12px rgba(0,0,0,0.05)",
       },
       borderRadius: {
         "2xl": "1.5rem",
@@ -49,11 +50,11 @@ const config: Config = {
         "pulse-glow": {
           "0%, 100%": {
             opacity: "1",
-            boxShadow: "0 0 20px rgba(255, 60, 142, 0.4)",
+            boxShadow: "0 4px 14px 0 rgba(139, 92, 246, 0.39)",
           },
           "50%": {
             opacity: "0.8",
-            boxShadow: "0 0 40px rgba(255, 60, 142, 0.8)",
+            boxShadow: "0 6px 20px rgba(139, 92, 246, 0.6)",
           },
         },
         "float": {

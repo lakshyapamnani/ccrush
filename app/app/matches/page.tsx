@@ -51,19 +51,19 @@ export default function MatchesPage() {
   return (
     <div className="min-h-screen bg-gradient-brand px-4 py-8">
       <div className="max-w-md mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-1">Matches</h1>
-        <p className="text-brand-mutedText mb-8">
-          {matches.length} mutual match{matches.length !== 1 ? 'es' : ''}
+        <h1 className="text-4xl font-extrabold text-[#111] mb-1">Matches</h1>
+        <p className="text-brand-mutedText font-medium mb-8">
+          {matches.length} connection{matches.length !== 1 ? 's' : ''}
         </p>
 
         {matches.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-full bg-brand-pink/20 flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-16 bg-white rounded-3xl shadow-sm border border-gray-100 mt-4">
+            <div className="w-16 h-16 rounded-full bg-brand-pink/10 flex items-center justify-center mx-auto mb-4">
               <Heart className="w-8 h-8 text-brand-pink" />
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">No Matches Yet</h2>
+            <h2 className="text-xl font-bold text-[#111] mb-2">No Connections Yet</h2>
             <p className="text-brand-mutedText">
-              When you and someone both like each other, they'll appear here!
+              When you like someone, they'll appear here!
             </p>
           </div>
         ) : (
@@ -74,14 +74,14 @@ export default function MatchesPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-brand-cardBg rounded-2xl border border-brand-deep overflow-hidden hover:border-brand-pink transition-colors group"
+                className="bg-white rounded-2xl border border-brand-border overflow-hidden hover:border-brand-pink/50 shadow-sm transition-colors group"
               >
                 <button
                   onClick={() => router.push(`/app/chat?matchId=${item.match.id}`)}
                   className="w-full p-4 flex items-center gap-4"
                 >
                   {/* Avatar */}
-                  <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-pink/50 group-hover:border-brand-pink transition-colors">
+                  <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-pink/20 group-hover:border-brand-pink transition-colors">
                     {item.otherUser.photos?.[0] ? (
                       <img
                         src={item.otherUser.photos[0]}
@@ -89,7 +89,7 @@ export default function MatchesPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-brand-deep flex items-center justify-center text-xl font-bold text-white">
+                      <div className="w-full h-full bg-brand-pink/10 flex items-center justify-center text-xl font-bold text-brand-pink">
                         {item.otherUser.name[0]}
                       </div>
                     )}
@@ -97,15 +97,15 @@ export default function MatchesPage() {
 
                   {/* Info */}
                   <div className="flex-1 text-left min-w-0">
-                    <h3 className="font-semibold text-white">
+                    <h3 className="font-bold text-[#111]">
                       {item.otherUser.name}, {item.otherUser.age}
                     </h3>
-                    <p className="text-sm text-brand-mutedText truncate">{item.otherUser.course}</p>
+                    <p className="text-sm text-brand-mutedText font-medium truncate">{item.otherUser.course}</p>
                   </div>
 
                   {/* Chat icon */}
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-pink flex items-center justify-center group-hover:shadow-glow transition-all">
-                    <MessageCircle className="w-5 h-5 text-white" />
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-brand-deep flex items-center justify-center group-hover:bg-brand-pink transition-all">
+                    <MessageCircle className="w-5 h-5 text-brand-mutedText group-hover:text-white" />
                   </div>
                 </button>
               </motion.div>

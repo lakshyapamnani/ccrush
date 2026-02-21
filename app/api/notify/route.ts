@@ -18,7 +18,10 @@ export async function POST(req: NextRequest) {
 
         const body = {
             app_id: ONESIGNAL_APP_ID,
-            filters: [{ field: 'tag', key: 'uid', relation: '=', value: targetUid }],
+            target_channel: "push",
+            include_aliases: {
+                external_id: [targetUid]
+            },
             headings: { en: title },
             contents: { en: message },
         }

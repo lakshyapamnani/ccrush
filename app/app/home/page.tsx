@@ -11,7 +11,7 @@ import {
   createMatch,
 } from '@/lib/firebase'
 import { useAuth } from '@/lib/AuthContext'
-import SwipeCard from '@/components/SwipeCard'
+import ProfileFeedCard from '@/components/ProfileFeedCard'
 
 export default function HomePage() {
   const { user, profile: myProfile } = useAuth()
@@ -72,13 +72,11 @@ export default function HomePage() {
     try {
       await recordSwipe(user.uid, target.uid, 'like')
       sendNotification(target.uid, '💜 Someone liked you!', `${myProfile?.name || 'Someone'} liked your profile on College Crush!`)
-      const theirAction = await getSwipeAction(target.uid, user.uid)
-      if (theirAction === 'like' || theirAction === 'super-like') {
-        await createMatch(user.uid, target.uid)
-        setMatchFlash(target.name)
-        setTimeout(() => setMatchFlash(null), 3000)
-        sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
-      }
+      // Instant one-sided match
+      await createMatch(user.uid, target.uid)
+      setMatchFlash(target.name)
+      setTimeout(() => setMatchFlash(null), 3000)
+      sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       console.error('Firebase write error:', msg)
@@ -96,13 +94,11 @@ export default function HomePage() {
     try {
       await recordSwipe(user.uid, target.uid, 'super-like')
       sendNotification(target.uid, '⚡ Super Like!', `${myProfile?.name || 'Someone'} super liked your profile on College Crush!`)
-      const theirAction = await getSwipeAction(target.uid, user.uid)
-      if (theirAction === 'like' || theirAction === 'super-like') {
-        await createMatch(user.uid, target.uid)
-        setMatchFlash(target.name)
-        setTimeout(() => setMatchFlash(null), 3000)
-        sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
-      }
+      // Instant one-sided match
+      await createMatch(user.uid, target.uid)
+      setMatchFlash(target.name)
+      setTimeout(() => setMatchFlash(null), 3000)
+      sendNotification(target.uid, "🎉 It's a Match!", `You matched with ${myProfile?.name || 'someone'} on College Crush!`)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
       console.error('Firebase write error:', msg)
@@ -165,7 +161,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-screen bg-gradient-brand flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
+    <div className="h-[100dvh] bg-brand-deep flex flex-col items-center overflow-x-hidden overflow-y-auto">
       {/* Match flash banner */}
       <AnimatePresence>
         {matchFlash && (
@@ -182,46 +178,38 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-md flex flex-col min-h-full">
         {/* Firebase rules error banner */}
         {firebaseError && (
-          <div className="mb-4 px-4 py-3 bg-red-500/20 border border-red-500/50 rounded-2xl text-red-300 text-xs text-center">
+          <div className="mx-4 mt-6 mb-2 px-4 py-3 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-xs text-center shadow-sm">
             ⚠️ {firebaseError}
           </div>
         )}
 
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-1">Discover</h1>
-          <p className="text-brand-mutedText">Swipe to find your match</p>
+        <div className="pt-8 pb-4 px-4 flex-shrink-0">
+          <h1 className="text-4xl font-extrabold text-[#111] mb-1">Discover</h1>
+          <p className="text-brand-mutedText font-medium">Find your next connection</p>
         </div>
 
-        <div className="w-full h-96 mb-8">
+        <div className="flex-1 w-full px-4 pb-24">
           <AnimatePresence mode="wait">
             {profiles[currentIndex] && (
-              <SwipeCard
+              <motion.div
                 key={profiles[currentIndex].uid}
-                profile={profiles[currentIndex]}
-                onPass={handlePass}
-                onLike={handleLike}
-                onSuperLike={handleSuperLike}
-              />
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ProfileFeedCard
+                  profile={profiles[currentIndex]}
+                  onPass={handlePass}
+                  onLike={handleLike}
+                  onSuperLike={handleSuperLike}
+                />
+              </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        <div className="flex gap-4 justify-center">
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handlePass}
-            className="w-16 h-16 rounded-full bg-brand-cardBg border-2 border-brand-deep hover:border-brand-mutedText flex items-center justify-center text-white transition-colors">
-            <X className="w-6 h-6" />
-          </motion.button>
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleSuperLike}
-            className="w-16 h-16 rounded-full bg-blue-500/20 hover:bg-blue-500/30 border-2 border-blue-500/50 flex items-center justify-center text-blue-400 transition-colors">
-            <Zap className="w-6 h-6" />
-          </motion.button>
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleLike}
-            className="w-16 h-16 rounded-full bg-gradient-pink hover:shadow-glow-lg flex items-center justify-center text-white transition-all">
-            <Heart className="w-6 h-6 fill-white" />
-          </motion.button>
         </div>
       </div>
     </div>

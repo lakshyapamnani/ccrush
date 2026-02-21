@@ -123,27 +123,27 @@ export default function ChatPage() {
       <div className="flex-1 flex overflow-hidden">
 
         {/* Sidebar — hidden on mobile if chat is selected */}
-        <div className={`${selectedId ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r border-white/5 flex-col bg-brand-deep`}>
-          <div className="p-4 border-b border-white/5 bg-brand-deep/50 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Chats</h2>
-            <MoreVertical className="w-5 h-5 text-brand-mutedText cursor-pointer hover:text-white transition-colors" />
+        <div className={`${selectedId ? 'hidden md:flex' : 'flex'} w-full md:w-80 border-r border-brand-border flex-col bg-brand-deep`}>
+          <div className="p-4 border-b border-brand-border bg-white flex items-center justify-between">
+            <h2 className="text-xl font-bold text-[#111]">Chats</h2>
+            <MoreVertical className="w-5 h-5 text-brand-mutedText cursor-pointer hover:text-[#111] transition-colors" />
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto p-2 space-y-1 bg-brand-deep">
             {convs.map((c) => (
               <button key={c.matchId} onClick={() => setSelectedId(c.matchId)}
-                className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all ${selectedId === c.matchId ? 'bg-brand-pink/20' : 'hover:bg-white/5'}`}
+                className={`w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all ${selectedId === c.matchId ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
               >
                 <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border-2 border-brand-pink/20 p-0.5">
                   <div className="w-full h-full rounded-full overflow-hidden">
                     {c.otherUser.photos?.[0]
                       ? <img src={c.otherUser.photos[0]} alt={c.otherUser.name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full bg-brand-pink/30 flex items-center justify-center text-white font-bold">{c.otherUser.name[0]}</div>
+                      : <div className="w-full h-full bg-brand-pink/10 flex items-center justify-center text-brand-pink font-bold">{c.otherUser.name[0]}</div>
                     }
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
-                    <p className="font-bold text-white truncate">{c.otherUser.name}</p>
+                    <p className="font-bold text-[#111] truncate">{c.otherUser.name}</p>
                     <span className="text-[10px] text-brand-mutedText">12:34 PM</span>
                   </div>
                   <p className="text-sm text-brand-mutedText truncate">Tap to chat ✨</p>
@@ -155,29 +155,29 @@ export default function ChatPage() {
 
         {/* Chat area */}
         {selectedId && otherUser ? (
-          <div className={`${selectedId ? 'flex' : 'hidden md:flex'} flex-1 flex flex-col bg-[#2B0F1E]`}>
+          <div className={`${selectedId ? 'flex' : 'hidden md:flex'} flex-1 flex flex-col bg-white`}>
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-white/5 bg-brand-deep/80 backdrop-blur-md sticky top-0 z-10">
-              <button onClick={() => setSelectedId(null)} className="md:hidden p-2 hover:bg-white/10 rounded-full transition-colors">
-                <ArrowLeft className="w-5 h-5 text-white" />
+            <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-brand-border bg-white/90 backdrop-blur-md z-10">
+              <button onClick={() => setSelectedId(null)} className="md:hidden p-2 hover:bg-black/5 rounded-full transition-colors">
+                <ArrowLeft className="w-5 h-5 text-[#111]" />
               </button>
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-brand-pink/30 p-0.5 flex-shrink-0">
                 <div className="w-full h-full rounded-full overflow-hidden">
                   {otherUser.photos?.[0]
                     ? <img src={otherUser.photos[0]} alt={otherUser.name} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full bg-brand-pink/30 flex items-center justify-center text-white font-bold">{otherUser.name[0]}</div>
+                    : <div className="w-full h-full bg-brand-pink/10 flex items-center justify-center text-brand-pink font-bold">{otherUser.name[0]}</div>
                   }
                 </div>
               </div>
               <div className="flex-1">
-                <p className="font-bold text-white leading-tight">{otherUser.name}</p>
+                <p className="font-bold text-[#111] leading-tight">{otherUser.name}</p>
                 <p className="text-[10px] text-brand-pink animate-pulse">online</p>
               </div>
-              <MoreVertical className="w-5 h-5 text-brand-mutedText cursor-pointer hover:text-white transition-colors" />
+              <MoreVertical className="w-5 h-5 text-brand-mutedText cursor-pointer hover:text-[#111] transition-colors" />
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 relative" style={{
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 relative bg-brand-deep" style={{
               backgroundImage: 'radial-gradient(rgba(235, 78, 142, 0.05) 1px, transparent 1px)',
               backgroundSize: '24px 24px'
             }}>
@@ -207,14 +207,14 @@ export default function ChatPage() {
                         )}
                       </div>
                     )}
-                    <div className={`relative max-w-[80%] px-4 py-2.5 shadow-lg group ${isMe
+                    <div className={`relative max-w-[80%] px-4 py-2.5 shadow-sm group ${isMe
                       ? 'bg-brand-pink text-white rounded-2xl rounded-tr-none'
-                      : 'bg-brand-cardBg text-white rounded-2xl rounded-tl-none border border-white/5'
+                      : 'bg-white text-[#111] rounded-2xl rounded-tl-none border border-brand-border'
                       }`}>
-                      {/* Tail for WhatsApp bubble look */}
+                      {/* Tail for bubble look */}
                       <div className={`absolute top-0 w-3 h-3 ${isMe
                         ? '-right-1.5 bg-brand-pink clip-path-tail-right'
-                        : '-left-1.5 bg-brand-cardBg clip-path-tail-left'}`}>
+                        : '-left-1.5 bg-white clip-path-tail-left'}`}>
                       </div>
 
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -238,10 +238,10 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-brand-deep border-t border-white/5 backdrop-blur-md">
+            <div className="flex-shrink-0 p-4 bg-white border-t border-brand-border">
               <form onSubmit={handleSend} className="flex items-end gap-2 max-w-4xl mx-auto">
-                <div className="flex-1 flex items-end gap-2 p-1.5 bg-brand-cardBg rounded-[24px] border border-white/10 shadow-inner group focus-within:border-brand-pink/50 transition-all">
-                  <button type="button" className="p-2.5 text-brand-mutedText hover:text-white transition-colors">
+                <div className="flex-1 flex items-end gap-2 p-1.5 bg-brand-deep rounded-[24px] border border-brand-border shadow-inner group focus-within:border-brand-pink/50 transition-all">
+                  <button type="button" className="p-2.5 text-brand-mutedText hover:text-[#111] transition-colors">
                     <Smile className="w-6 h-6" />
                   </button>
                   <textarea
@@ -259,16 +259,16 @@ export default function ChatPage() {
                       }
                     }}
                     placeholder="Type a message..."
-                    className="flex-1 max-h-32 bg-transparent text-white placeholder-brand-mutedText resize-none py-2.5 focus:outline-none text-sm"
+                    className="flex-1 max-h-32 bg-transparent text-[#111] placeholder-brand-mutedText resize-none py-2.5 focus:outline-none text-sm"
                   />
-                  <button type="button" className="p-2.5 text-brand-mutedText hover:text-white transition-colors">
+                  <button type="button" className="p-2.5 text-brand-mutedText hover:text-[#111] transition-colors">
                     <Plus className="w-6 h-6" />
                   </button>
                 </div>
                 <button
                   type="submit"
                   disabled={!text.trim() || isSending}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${text.trim() ? 'bg-brand-pink shadow-glow scale-110' : 'bg-brand-cardBg text-brand-mutedText'
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${text.trim() ? 'bg-brand-pink shadow-glow scale-110' : 'bg-brand-deep border border-brand-border text-brand-mutedText'
                     }`}
                 >
                   {isSending ? (
@@ -281,12 +281,12 @@ export default function ChatPage() {
             </div>
           </div>
         ) : (
-          <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-[#2B0F1E] text-brand-mutedText space-y-4">
+          <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-brand-deep text-brand-mutedText space-y-4">
             <div className="w-24 h-24 rounded-full bg-brand-pink/5 flex items-center justify-center">
-              <Plus className="w-12 h-12 text-brand-pink/20" />
+              <Heart className="w-12 h-12 text-brand-pink/20" />
             </div>
             <div className="text-center">
-              <p className="text-lg font-bold text-white/80">College Crush Chat</p>
+              <p className="text-lg font-bold text-[#111]">College Crush Chat</p>
               <p className="text-sm">Select a match to start your conversation ✨</p>
             </div>
           </div>

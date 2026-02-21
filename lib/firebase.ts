@@ -61,6 +61,8 @@ export interface UserProfile {
   course: string
   gender: 'male' | 'female' | 'other'
   photos: string[] // Cloudinary URLs; index 0 is required
+  interests?: string[]
+  prompts?: { question: string; answer: string }[]
   createdAt: number
 }
 

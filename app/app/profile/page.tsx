@@ -7,6 +7,19 @@ import { LogOut, Edit2, Camera, CheckCircle2, X } from 'lucide-react'
 import { useAuth } from '@/lib/AuthContext'
 import { signOut, saveUserProfile } from '@/lib/firebase'
 import { uploadToCloudinary } from '@/lib/cloudinary'
+import ProfileFeedCard from '@/components/ProfileFeedCard'
+
+const PROMPT_CHOICES = [
+  "I'm looking for...",
+  "A random fact I love is...",
+  "My simple pleasures...",
+  "I geek out on...",
+  "Typical Sunday...",
+  "Let's make sure we're on the same page about...",
+  "My most irrational fear...",
+  "We'll get along if...",
+  "I'm weirdly attracted to...",
+]
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -23,6 +36,8 @@ export default function ProfilePage() {
     bio: '',
     course: '',
     gender: '' as 'male' | 'female' | 'other' | '',
+    interests: [] as string[],
+    prompts: [] as { question: string; answer: string }[],
   })
   const [editPhotos, setEditPhotos] = useState<string[]>([])
 
@@ -31,9 +46,11 @@ export default function ProfilePage() {
     setForm({
       name: profile.name,
       age: String(profile.age),
-      bio: profile.bio,
-      course: profile.course,
+      bio: profile.bio || '',
+      course: profile.course || '',
       gender: profile.gender ?? '',
+      interests: profile.interests || [],
+      prompts: profile.prompts || [],
     })
     setEditPhotos([...profile.photos])
     setIsEditing(true)
@@ -63,6 +80,8 @@ export default function ProfilePage() {
         bio: form.bio.trim(),
         course: form.course.trim(),
         gender: (form.gender || profile.gender || 'other') as 'male' | 'female' | 'other',
+        interests: form.interests.filter(Boolean),
+        prompts: form.prompts.filter((p) => p.question && p.answer.trim()),
         photos: editPhotos,
         createdAt: profile.createdAt,
       })
@@ -112,20 +131,22 @@ export default function ProfilePage() {
   const galleryPhotos = profile.photos?.slice(1) || []
 
   return (
-    <div className="bg-gradient-brand px-4 py-8 pb-8">
+    <div className="bg-gradient-brand px-4 py-8 pb-8 min-h-screen">
       <div className="max-w-md mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-white">Profile</h1>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={isEditing ? () => setIsEditing(false) : startEditing}
-            className="p-2 rounded-lg bg-brand-pink/20 hover:bg-brand-pink/30 text-brand-pink transition-colors"
-          >
-            {isEditing ? <X className="w-5 h-5" /> : <Edit2 className="w-5 h-5" />}
-          </motion.button>
+          <h1 className="text-3xl font-extrabold text-[#111]">Profile</h1>
+          {!isEditing && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={startEditing}
+              className="p-2 rounded-lg bg-brand-pink/10 hover:bg-brand-pink/20 text-brand-pink transition-colors"
+            >
+              <Edit2 className="w-5 h-5" />
+            </motion.button>
+          )}
         </div>
 
         <AnimatePresence mode="wait">
@@ -138,68 +159,29 @@ export default function ProfilePage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-6"
             >
-              {/* Profile Photo */}
-              <div className="flex justify-center">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-brand-pink shadow-glow">
-                  {mainPhoto ? (
-                    <img src={mainPhoto} alt={profile.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-brand-cardBg flex items-center justify-center">
-                      <Camera className="w-10 h-10 text-brand-mutedText" />
-                    </div>
-                  )}
-                </div>
+              {/* Profile Preview Explanation */}
+              <div className="mb-4 text-center">
+                <h2 className="text-xl font-bold text-[#111] mb-1">Profile Preview</h2>
+                <p className="text-sm text-brand-mutedText">This is exactly how others see you on the feed.</p>
               </div>
 
-              {/* Basic Info */}
-              <motion.div whileHover={{ y: -2 }} className="bg-brand-cardBg rounded-2xl border border-brand-deep p-6">
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  {profile.name}, {profile.age}
-                </h2>
-                <div className="space-y-2 text-sm">
-                  <p className="text-brand-mutedText">
-                    <span className="text-white font-semibold">Course:</span> {profile.course}
-                  </p>
-                  <p className="text-brand-mutedText">
-                    <span className="text-white font-semibold">Email:</span> {profile.email}
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* Bio */}
-              <motion.div whileHover={{ y: -2 }} className="bg-brand-cardBg rounded-2xl border border-brand-deep p-6">
-                <h3 className="font-semibold text-white mb-3">About Me</h3>
-                <p className="text-brand-mutedText text-sm">{profile.bio}</p>
-              </motion.div>
-
-              {/* Gallery */}
-              {galleryPhotos.length > 0 && (
-                <motion.div whileHover={{ y: -2 }} className="bg-brand-cardBg rounded-2xl border border-brand-deep p-6">
-                  <h3 className="font-semibold text-white mb-4">Photos</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {galleryPhotos.map((photo, i) => (
-                      <div key={i} className="aspect-square rounded-xl overflow-hidden border border-brand-deep">
-                        <img src={photo} alt={`Photo ${i + 2}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+              {/* Feed Card Render for Preview */}
+              <ProfileFeedCard profile={profile} isPreview={true} />
 
               {/* Actions */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-6 border-t border-brand-border">
                 <motion.button
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={handleLogout}
-                  className="w-full py-3 rounded-2xl bg-brand-cardBg border border-brand-deep hover:border-brand-pink text-white font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-3 rounded-2xl bg-white border border-brand-border text-[#111] font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
                 >
-                  <LogOut className="w-5 h-5" /> Log Out
+                  <LogOut className="w-5 h-5 text-gray-400" /> Log Out
                 </motion.button>
 
                 <motion.button
                   whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full py-3 rounded-2xl bg-red-500/20 border border-red-500/50 hover:bg-red-500/30 text-red-400 font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="w-full py-3 rounded-2xl bg-red-50 border border-red-200 hover:bg-red-100 text-red-600 font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
                 >
                   Delete Account
                 </motion.button>
@@ -216,7 +198,7 @@ export default function ProfilePage() {
             >
               {/* Photo edit grid */}
               <div>
-                <label className="block text-sm font-medium text-white mb-3">Photos</label>
+                <label className="block text-sm font-bold text-[#111] mb-3">Photos</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[0, 1, 2].map((i) => (
                     <label key={i} className="relative aspect-square cursor-pointer group">
@@ -224,11 +206,11 @@ export default function ProfilePage() {
                         <img
                           src={editPhotos[i]}
                           alt={`Photo ${i + 1}`}
-                          className="w-full h-full object-cover rounded-2xl"
+                          className="w-full h-full object-cover rounded-2xl shadow-sm border border-brand-border"
                         />
                       ) : (
-                        <div className="w-full h-full rounded-2xl border-2 border-dashed border-brand-deep flex items-center justify-center">
-                          <Camera className="w-6 h-6 text-brand-mutedText" />
+                        <div className="w-full h-full rounded-2xl border border-dashed border-gray-300 bg-white flex items-center justify-center">
+                          <Camera className="w-6 h-6 text-gray-300" />
                         </div>
                       )}
                       <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -246,47 +228,47 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Name</label>
+                <label className="block text-sm font-bold text-[#111] mb-2">Name</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl bg-brand-cardBg border border-brand-deep text-white focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all"
+                  className="w-full px-4 py-3 rounded-2xl bg-white border border-brand-border text-[#111] font-medium focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Age</label>
+                <label className="block text-sm font-bold text-[#111] mb-2">Age</label>
                 <input
                   type="number"
                   value={form.age}
                   onChange={(e) => setForm({ ...form, age: e.target.value })}
                   min="18"
-                  className="w-full px-4 py-3 rounded-2xl bg-brand-cardBg border border-brand-deep text-white focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all"
+                  className="w-full px-4 py-3 rounded-2xl bg-white border border-brand-border text-[#111] font-medium focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-2">Course / Major</label>
+                <label className="block text-sm font-bold text-[#111] mb-2">Course / Major</label>
                 <input
                   type="text"
                   value={form.course}
                   onChange={(e) => setForm({ ...form, course: e.target.value })}
-                  className="w-full px-4 py-3 rounded-2xl bg-brand-cardBg border border-brand-deep text-white focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all"
+                  className="w-full px-4 py-3 rounded-2xl bg-white border border-brand-border text-[#111] font-medium focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white mb-3">Gender</label>
+                <label className="block text-sm font-bold text-[#111] mb-3">Gender</label>
                 <div className="flex gap-3">
                   {(['male', 'female', 'other'] as const).map((g) => (
                     <button
                       key={g}
                       type="button"
                       onClick={() => setForm({ ...form, gender: g })}
-                      className={`flex-1 py-3 rounded-2xl text-sm font-semibold capitalize transition-all ${form.gender === g
-                          ? 'bg-gradient-pink text-white shadow-glow'
-                          : 'bg-brand-cardBg border border-brand-deep text-brand-mutedText hover:border-brand-pink'
+                      className={`flex-1 py-3 rounded-2xl text-sm font-bold capitalize transition-all ${form.gender === g
+                        ? 'bg-gradient-pink text-white shadow-glow'
+                        : 'bg-white border border-brand-border text-[#444] shadow-sm hover:border-brand-pink/50'
                         }`}
                     >
                       {g === 'male' ? '♂ Male' : g === 'female' ? '♀ Female' : '⚧ Other'}
@@ -297,38 +279,136 @@ export default function ProfilePage() {
 
               <div>
                 <div className="flex justify-between mb-2">
-                  <label className="block text-sm font-medium text-white">About Me</label>
+                  <label className="block text-sm font-bold text-[#111]">About Me</label>
                   <span className="text-xs text-brand-mutedText">{form.bio.length}/200</span>
                 </div>
                 <textarea
                   value={form.bio}
                   onChange={(e) => setForm({ ...form, bio: e.target.value.slice(0, 200) })}
                   rows={4}
-                  className="w-full px-4 py-3 rounded-2xl bg-brand-cardBg border border-brand-deep text-white focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-2xl bg-white border border-brand-border text-[#111] font-medium focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all resize-none shadow-sm"
                 />
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              <div>
+                <div className="flex justify-between mb-2">
+                  <label className="block text-sm font-bold text-[#111]">Interests</label>
+                  <span className="text-xs text-brand-mutedText">{form.interests.length}/5</span>
+                </div>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {form.interests.map((interest, i) => (
+                    <span key={i} className="px-3 py-1.5 bg-brand-deep text-[#444] rounded-full text-sm font-semibold border border-brand-border flex items-center gap-2">
+                      {interest}
+                      <button type="button" onClick={() => setForm({ ...form, interests: form.interests.filter((_, idx) => idx !== i) })} className="text-gray-400 hover:text-red-500"><X className="w-3 h-3" /></button>
+                    </span>
+                  ))}
+                </div>
+                {form.interests.length < 5 && (
+                  <input
+                    type="text"
+                    placeholder="Add an interest and press Enter"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        const val = e.currentTarget.value.trim()
+                        if (val && !form.interests.includes(val)) {
+                          setForm({ ...form, interests: [...form.interests, val] })
+                          e.currentTarget.value = ''
+                        }
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-2xl bg-white border border-brand-border text-[#111] font-medium focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all shadow-sm"
+                  />
+                )}
+              </div>
+
+              <div>
+                <div className="flex justify-between mb-2">
+                  <label className="block text-sm font-bold text-[#111]">Prompts</label>
+                  <span className="text-xs text-brand-mutedText">{form.prompts.length}/3</span>
+                </div>
+
+                <div className="space-y-4 mb-4">
+                  {form.prompts.map((prompt, i) => (
+                    <div key={i} className="p-4 rounded-2xl border border-brand-border bg-brand-deep relative">
+                      <button type="button" onClick={() => setForm({ ...form, prompts: form.prompts.filter((_, idx) => idx !== i) })} className="absolute top-3 right-3 text-gray-400 hover:text-red-500"><X className="w-4 h-4" /></button>
+                      <select
+                        value={prompt.question}
+                        onChange={(e) => {
+                          const newPrompts = [...form.prompts]
+                          newPrompts[i].question = e.target.value
+                          setForm({ ...form, prompts: newPrompts })
+                        }}
+                        className="w-full mb-2 bg-transparent text-sm font-bold text-brand-mutedText focus:outline-none"
+                      >
+                        <option value="" disabled>Select a prompt...</option>
+                        {PROMPT_CHOICES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <textarea
+                        value={prompt.answer}
+                        onChange={(e) => {
+                          const newPrompts = [...form.prompts]
+                          newPrompts[i].answer = e.target.value
+                          setForm({ ...form, prompts: newPrompts })
+                        }}
+                        placeholder="Your answer..."
+                        rows={2}
+                        className="w-full bg-transparent text-[#111] font-bold text-lg resize-none focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {form.prompts.length < 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, prompts: [...form.prompts, { question: '', answer: '' }] })}
+                    className="w-full py-3 rounded-2xl border-2 border-dashed border-brand-border text-brand-mutedText font-bold hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-center gap-2"
+                  >
+                    Add a Prompt
+                  </button>
+                )}
+              </div>
+
+              {/* Spacer for bottom bar */}
+              <div className="h-24"></div>
+
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Fixed Bottom Action Bar (Moved outside AnimatePresence so it's not clipped) */}
+        {isEditing && (
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-brand-border z-50 shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+            <div className="max-w-md mx-auto flex gap-3">
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="flex-1 py-4 rounded-2xl bg-white border border-brand-border text-[#444] font-bold hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full py-3 rounded-2xl bg-gradient-pink text-white font-semibold hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-4 rounded-2xl bg-[#111] text-white font-bold hover:bg-black hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    Save Changes
+                    <CheckCircle2 className="w-5 h-5" />
+                    Save
                   </>
                 )}
-              </motion.button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirm Modal */}
@@ -342,22 +422,22 @@ export default function ProfilePage() {
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-brand-cardBg rounded-2xl p-6 max-w-sm w-full border border-brand-deep"
+              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl"
             >
-              <h2 className="text-2xl font-bold text-white mb-2">Delete Account?</h2>
-              <p className="text-brand-mutedText mb-6">This action cannot be undone.</p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 py-3 rounded-2xl border border-brand-deep text-white font-semibold hover:bg-white/5 transition-colors"
-                >
-                  Cancel
-                </button>
+              <h2 className="text-2xl font-extrabold text-[#111] mb-2">Delete Account?</h2>
+              <p className="text-[#666] font-medium mb-8">This action cannot be undone and your profile will be permanently removed.</p>
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={handleDeleteAccount}
-                  className="flex-1 py-3 rounded-2xl bg-red-500/20 border border-red-500/50 text-red-400 font-semibold hover:bg-red-500/30 transition-colors"
+                  className="w-full py-3 rounded-2xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors shadow-sm"
                 >
-                  Delete
+                  Yes, Delete My Account
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="w-full py-3 rounded-2xl border border-gray-200 text-[#444] font-bold hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
             </motion.div>
