@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser,
 } from 'firebase/auth'
-import { getDatabase, ref, set, get } from 'firebase/database'
+import { getDatabase, ref, set, get, push, onValue } from 'firebase/database'
 
 const firebaseConfig = {
   apiKey: 'AIzaSyCJ0nwpVjY2aH41xNdGeuaRFaOmIBKK378',
@@ -153,22 +153,25 @@ export async function sendMessage(
   senderUid: string,
   text: string
 ): Promise<void> {
-  const { push } = await import('firebase/database')
-  const msgRef = push(ref(db, `messages/${matchId}`))
-  await set(msgRef, { senderUid, text, timestamp: Date.now() })
+  try {
+    const msgRef = push(ref(db, `messages/${matchId}`))
+    await set(msgRef, { senderUid, text, timestamp: Date.now() })
+  } catch (err) {
+    console.error('Send message error:', err)
+    throw err
+  }
 }
 
 export function subscribeToMessages(
   matchId: string,
   callback: (msgs: ChatMessage[]) => void
 ): () => void {
-  const { onValue } = require('firebase/database')
   const msgsRef = ref(db, `messages/${matchId}`)
-  const unsub = onValue(msgsRef, (snapshot: { exists: () => boolean; forEach: (fn: (child: { key: string; val: () => Omit<ChatMessage, 'id'> }) => void) => void }) => {
+  const unsub = onValue(msgsRef, (snapshot) => {
     const msgs: ChatMessage[] = []
     if (snapshot.exists()) {
       snapshot.forEach((child) => {
-        msgs.push({ id: child.key, ...child.val() })
+        msgs.push({ id: child.key as string, ...child.val() })
       })
     }
     callback(msgs)

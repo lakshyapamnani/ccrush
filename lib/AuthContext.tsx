@@ -50,6 +50,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                             try {
                                 OneSignal.login?.(firebaseUser.uid)
                                 OneSignal.User?.addTag('uid', firebaseUser.uid)
+
+                                // Proactively prompt for notifications if not granted
+                                if (OneSignal.Notifications?.permission !== 'granted') {
+                                    OneSignal.Slidedown?.promptPush()
+                                }
                             } catch { /* ignore */ }
                         })
                     }
