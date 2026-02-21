@@ -24,7 +24,7 @@ export default function ChatPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialMatchId = searchParams.get('matchId')
-  const { user } = useAuth()
+  const { user, profile: myProfile } = useAuth()
 
   const [convs, setConvs] = useState<ConvItem[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(initialMatchId)
@@ -76,12 +76,23 @@ export default function ChatPage() {
     return unsub
   }, [selectedId, convs])
 
+  const sendNotification = (targetUid: string, title: string, message: string) => {
+    fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetUid, title, message }),
+    }).catch(() => { /* silently ignore */ })
+  }
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !selectedId || !text.trim() || isSending) return
     setIsSending(true)
     try {
       await sendMessage(selectedId, user.uid, text.trim())
+      if (otherUser) {
+        sendNotification(otherUser.uid, `💬 New message from ${myProfile?.name || 'Someone'}`, text.trim())
+      }
       setText('')
     } catch (err) {
       console.error('Failed to send:', err)
