@@ -47,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={poppins.variable}>
-      <body className="font-sans antialiased bg-gradient-brand min-h-screen overflow-hidden">
+      <body className="font-sans antialiased bg-gradient-brand min-h-screen overflow-x-hidden">
         <AuthProvider>
           {children}
         </AuthProvider>

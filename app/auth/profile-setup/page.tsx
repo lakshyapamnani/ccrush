@@ -92,7 +92,7 @@ export default function ProfileSetupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-brand flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-gradient-brand flex flex-col items-center px-4 py-10 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}

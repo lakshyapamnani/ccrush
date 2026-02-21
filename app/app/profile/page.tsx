@@ -109,7 +109,7 @@ export default function ProfilePage() {
   const galleryPhotos = profile.photos?.slice(1) || []
 
   return (
-    <div className="min-h-screen bg-gradient-brand px-4 py-8">
+    <div className="bg-gradient-brand px-4 py-8 pb-8">
       <div className="max-w-md mx-auto">
 
         {/* Header */}
