@@ -22,6 +22,7 @@ export default function ProfilePage() {
     age: '',
     bio: '',
     course: '',
+    gender: '' as 'male' | 'female' | 'other' | '',
   })
   const [editPhotos, setEditPhotos] = useState<string[]>([])
 
@@ -32,6 +33,7 @@ export default function ProfilePage() {
       age: String(profile.age),
       bio: profile.bio,
       course: profile.course,
+      gender: profile.gender ?? '',
     })
     setEditPhotos([...profile.photos])
     setIsEditing(true)
@@ -60,6 +62,7 @@ export default function ProfilePage() {
         age: parseInt(form.age) || profile.age,
         bio: form.bio.trim(),
         course: form.course.trim(),
+        gender: (form.gender || profile.gender || 'other') as 'male' | 'female' | 'other',
         photos: editPhotos,
         createdAt: profile.createdAt,
       })
@@ -271,6 +274,25 @@ export default function ProfilePage() {
                   onChange={(e) => setForm({ ...form, course: e.target.value })}
                   className="w-full px-4 py-3 rounded-2xl bg-brand-cardBg border border-brand-deep text-white focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white mb-3">Gender</label>
+                <div className="flex gap-3">
+                  {(['male', 'female', 'other'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setForm({ ...form, gender: g })}
+                      className={`flex-1 py-3 rounded-2xl text-sm font-semibold capitalize transition-all ${form.gender === g
+                          ? 'bg-gradient-pink text-white shadow-glow'
+                          : 'bg-brand-cardBg border border-brand-deep text-brand-mutedText hover:border-brand-pink'
+                        }`}
+                    >
+                      {g === 'male' ? '♂ Male' : g === 'female' ? '♀ Female' : '⚧ Other'}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>

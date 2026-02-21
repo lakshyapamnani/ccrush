@@ -24,6 +24,7 @@ export default function ProfileSetupPage() {
     age: '',
     bio: '',
     course: '',
+    gender: '' as 'male' | 'female' | 'other' | '',
   })
 
   // photos[0] = required, photos[1] and photos[2] optional
@@ -63,6 +64,7 @@ export default function ProfileSetupPage() {
 
     if (!formData.name.trim()) { setError('Please enter your name'); return }
     if (!formData.age || parseInt(formData.age) < 18) { setError('You must be 18 or older'); return }
+    if (!formData.gender) { setError('Please select your gender'); return }
     if (!formData.bio.trim()) { setError('Please write a short description'); return }
     if (!formData.course.trim()) { setError('Please enter your course'); return }
     if (!photos[0]) { setError('Please upload at least 1 photo (required)'); return }
@@ -85,6 +87,7 @@ export default function ProfileSetupPage() {
         email: user.email || '',
         name: formData.name.trim(),
         age: parseInt(formData.age),
+        gender: formData.gender as 'male' | 'female' | 'other',
         bio: formData.bio.trim(),
         course: formData.course.trim(),
         photos: uploadedUrls,
@@ -213,6 +216,28 @@ export default function ProfileSetupPage() {
               max="30"
               className="w-full px-4 py-3 rounded-2xl bg-brand-cardBg border border-brand-deep text-white placeholder-brand-mutedText focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/30 transition-all"
             />
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-sm font-medium text-white mb-3">
+              Gender <span className="text-brand-pink">*</span>
+            </label>
+            <div className="flex gap-3">
+              {(['male', 'female', 'other'] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, gender: g })}
+                  className={`flex-1 py-3 rounded-2xl text-sm font-semibold capitalize transition-all ${formData.gender === g
+                      ? 'bg-gradient-pink text-white shadow-glow'
+                      : 'bg-brand-cardBg border border-brand-deep text-brand-mutedText hover:border-brand-pink'
+                    }`}
+                >
+                  {g === 'male' ? '♂ Male' : g === 'female' ? '♀ Female' : '⚧ Other'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Course */}

@@ -14,7 +14,7 @@ import { useAuth } from '@/lib/AuthContext'
 import SwipeCard from '@/components/SwipeCard'
 
 export default function HomePage() {
-  const { user } = useAuth()
+  const { user, profile: myProfile } = useAuth()
   const [profiles, setProfiles] = useState<UserProfile[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -25,7 +25,15 @@ export default function HomePage() {
     const loadProfiles = async () => {
       try {
         const all = await getAllUserProfiles()
-        const others = all.filter((p) => p.uid !== user?.uid)
+        const myGender = myProfile?.gender
+
+        const others = all.filter((p) => {
+          if (p.uid === user?.uid) return false
+          // Opposite-gender filter
+          if (myGender === 'male') return p.gender === 'female'
+          if (myGender === 'female') return p.gender === 'male'
+          return true // 'other' or no gender set → show everyone
+        })
         setProfiles(others)
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err)
@@ -35,7 +43,8 @@ export default function HomePage() {
       }
     }
     if (user) loadProfiles()
-  }, [user])
+  }, [user, myProfile])
+
 
   const nextCard = () => setCurrentIndex((prev) => prev + 1)
 

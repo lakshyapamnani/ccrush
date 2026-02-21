@@ -59,6 +59,7 @@ export interface UserProfile {
   age: number
   bio: string
   course: string
+  gender: 'male' | 'female' | 'other'
   photos: string[] // Cloudinary URLs; index 0 is required
   createdAt: number
 }
